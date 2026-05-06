@@ -1,82 +1,1174 @@
-<section id="portfolio" class="py-24 bg-white">
-        <div class="container mx-auto px-6">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl mb-4 uppercase">Strategic Project Portfolio</h2>
-                <p class="text-slate-500 tracking-widest uppercase text-xs">Proven Excellence in Large-Scale Water Infrastructure</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WTP Enterprise ZLD SCADA - 10 Core Architecture</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --led-green: #22c55e;
+            --led-blue: #3b82f6;
+            --led-cyan: #06b6d4;
+            --led-yellow: #eab308;
+            --led-red: #ef4444;
+            --led-purple: #a855f7;
+            --led-off: #1e293b;
+            --bg-scada: #020617;
+            --grid-color: rgba(51, 65, 85, 0.4);
+        }
+
+        body { background-color: #0f172a; font-family: 'Arial', sans-serif; padding-bottom: 50px; overflow-x: hidden; color: #cbd5e1; }
+        
+        /* Industrial Panel Frames */
+        .alu-frame {
+            background-color: #1e293b;
+            border: 12px solid #334155;
+            border-image: repeating-linear-gradient(45deg, #334155, #334155 10px, #1e293b 10px, #1e293b 20px) 12;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0,0,0,0.9);
+            border-radius: 8px; padding: 20px; max-width: 1400px; margin: 20px auto 30px auto; position: relative; 
+        }
+
+        .horizontal-bar {
+            height: 16px; background: repeating-linear-gradient(90deg, #475569, #475569 10px, #334155 10px, #334155 20px);
+            margin: 25px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.5); border-top: 2px solid #64748b; border-bottom: 2px solid #0f172a;
+        }
+
+        .acrylic-panel {
+            background-color: #0f172a; border: 1px solid #475569; position: relative; box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; z-index: 10; border-radius: 6px;
+        }
+        
+        /* LED & Hardware Components */
+        .hc-led { position: absolute; top: 10px; right: 10px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #475569; box-shadow: inset 0 2px 4px rgba(0,0,0,0.6); transition: 0.3s; }
+        .hc-green { background-color: var(--led-green); box-shadow: 0 0 10px var(--led-green); border-color: #4ade80;}
+        .hc-yellow { background-color: var(--led-yellow); box-shadow: 0 0 10px var(--led-yellow); border-color: #facc15;}
+        .hc-red { background-color: var(--led-red); box-shadow: 0 0 10px var(--led-red); animation: pulse-fast 0.5s infinite; border-color: #f87171;}
+
+        .screw {
+            width: 14px; height: 14px; border-radius: 50%; background: linear-gradient(135deg, #64748b, #334155);
+            border: 1px solid #0f172a; position: absolute; box-shadow: inset 0 1px 2px rgba(255,255,255,0.3), inset 0 -1px 2px rgba(0,0,0,0.8);
+        }
+        .screw::after { content: ''; position: absolute; top: 6px; left: 2px; right: 2px; height: 1.5px; background-color: #0f172a; transform: rotate(45deg); }
+        .screw.tl { top: 10px; left: 10px; } .screw.tr { top: 10px; right: 10px; } .screw.bl { bottom: 10px; left: 10px; } .screw.br { bottom: 10px; right: 10px; }
+
+        .panel-title {
+            text-align: center; font-weight: 800; font-size: 0.85rem; color: #94a3b8; padding: 12px 0 8px 0;
+            border-bottom: 2px solid #334155; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .toggle-switch {
+            width: 18px; height: 32px; background: #334155; border-radius: 4px; position: relative; margin: 0 auto; cursor: pointer;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.9), 0 2px 4px rgba(255,255,255,0.1); z-index: 60; border: 1px solid #0f172a;
+        }
+        .toggle-knob {
+            width: 24px; height: 12px; background: linear-gradient(to bottom, #94a3b8, #64748b); border-radius: 2px; position: absolute; left: -4px; bottom: 2px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.5); transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid #1e293b;
+        }
+        .toggle-switch.active .toggle-knob { bottom: 18px; background: linear-gradient(to bottom, #e2e8f0, #cbd5e1); }
+
+        .led {
+            width: 14px; height: 14px; border-radius: 50%; background-color: #020617; border: 2px solid #334155;
+            margin: 0 auto; box-shadow: inset 0 2px 4px rgba(0,0,0,0.8); transition: 0.15s;
+        }
+        .led.green.on { background-color: var(--led-green); box-shadow: 0 0 15px var(--led-green); border-color: #4ade80; }
+        .led.blue.on { background-color: var(--led-blue); box-shadow: 0 0 15px var(--led-blue); border-color: #60a5fa; }
+        .led.yellow.on { background-color: var(--led-yellow); box-shadow: 0 0 15px var(--led-yellow); border-color: #facc15; }
+        .led.cyan.on { background-color: var(--led-cyan); box-shadow: 0 0 15px var(--led-cyan); border-color: #22d3ee; }
+        .led.purple.on { background-color: var(--led-purple); box-shadow: 0 0 15px var(--led-purple); border-color: #c084fc; }
+
+        .btn-estop {
+            width: 56px; height: 56px; border-radius: 50%; background: radial-gradient(circle, #ef4444 20%, #991b1b 90%);
+            border: 4px solid #450a0a; box-shadow: 0 8px 15px rgba(0,0,0,0.6), inset 0 4px 6px rgba(255,255,255,0.3);
+            color: white; font-weight: 900; font-size: 11px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.1s; z-index: 60; text-shadow: 0 1px 2px rgba(0,0,0,0.9); letter-spacing: 1px;
+        }
+        .btn-estop.pressed { transform: scale(0.92) translateY(4px); box-shadow: inset 0 8px 15px rgba(0,0,0,0.9); background: radial-gradient(circle, #b91c1c 30%, #450a0a 100%); }
+
+        /* HMI Interfaces */
+        .hmi-box { background-color: #000000; border: 16px solid #020617; border-radius: 12px; color: white; display: flex; flex-direction: column; font-family: 'IBM Plex Mono', monospace; box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,1);}
+        .hmi-page { display: none; } .hmi-page.active { display: flex; }
+        
+        .hmi-nav-btn { flex: 1; background: #0f172a; color: #64748b; font-size: 9px; padding: 10px 2px; border-radius: 4px 4px 0 0; transition: 0.2s; cursor: pointer; text-align: center; font-weight: bold; border-top: 2px solid transparent;}
+        .hmi-nav-btn:hover { background: #1e293b; color: #f8fafc;}
+        .hmi-nav-btn.active { background: #1d4ed8; color: #ffffff; border-top-color: #60a5fa; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+
+        .timer-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 10px;}
+        .timer-table th { background: #020617; padding: 8px; text-align: center; color: #94a3b8; border-bottom: 2px solid #334155; text-transform: uppercase; letter-spacing: 1px;}
+        .timer-table td { padding: 6px 4px; text-align: center; border-bottom: 1px solid #1e293b; }
+        .timer-table td:first-child { text-align: left; }
+        
+        .inp-time { background: #020617; color: var(--text-main); border: 1px solid #334155; padding: 6px 4px; width: 45px; text-align: center; border-radius: 4px; font-family: 'IBM Plex Mono'; font-weight: bold; font-size: 11px; transition: 0.2s;}
+        .inp-time:focus { outline: none; border-color: var(--led-cyan); background: #0f172a; box-shadow: 0 0 8px rgba(6,182,212,0.4);}
+
+        .btn-trig { flex: 1; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; font-family: 'IBM Plex Mono'; font-size: 11px; border: 2px solid; background: #020617; transition: 0.2s; letter-spacing: 1px;}
+        .btn-trig.micro { color: var(--led-yellow); border-color: var(--led-yellow); box-shadow: 0 0 10px rgba(234, 179, 8, 0.15);}
+        .btn-trig.macro { color: var(--led-red); border-color: var(--led-red); box-shadow: 0 0 10px rgba(239, 68, 68, 0.15);}
+        .btn-trig:hover { background: #0f172a; transform: translateY(-1px);}
+
+        .mode-banner { text-align: center; font-weight: 800; padding: 10px; border-radius: 4px; margin-bottom: 8px; border: 2px solid #475569; font-size: 13px; letter-spacing: 1px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);}
+        .mode-auto { background: rgba(34, 197, 94, 0.1); color: var(--led-green); border-color: var(--led-green); text-shadow: 0 0 8px rgba(34, 197, 94, 0.4);}
+        .mode-macro { background: rgba(239, 68, 68, 0.15); color: var(--led-red); border-color: var(--led-red); animation: pulse 1.5s infinite; text-shadow: 0 0 8px rgba(239, 68, 68, 0.4);}
+        .mode-manual { background: rgba(234, 179, 8, 0.1); color: var(--led-yellow); border-color: var(--led-yellow); text-shadow: 0 0 8px rgba(234, 179, 8, 0.4);}
+
+        /* Blueprint SVG Styling */
+        .svg-blueprint { background-color: var(--bg-scada); background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px); background-size: 20px 20px; background-position: center center; border-radius: 8px; border: 1px solid #334155;}
+        
+        .bubble { fill: rgba(255,255,255,0.8); stroke: var(--led-cyan); opacity: 0; }
+        .anim-rise { animation: rise 0.8s infinite ease-in; }
+        @keyframes rise { 0% { transform: translateY(0); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(-70px); opacity: 0; } }
+
+        .bubble-floc { fill: rgba(255,255,255,0.8); stroke: var(--led-cyan); opacity: 0; }
+        .anim-rise-floc { animation: riseFloc 0.8s infinite ease-in; }
+        @keyframes riseFloc { 0% { transform: translateY(0); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(-135px); opacity: 0; } }
+
+        .anim-flow { animation: dashFlow 0.5s linear infinite; stroke-dasharray: 6, 4 !important; }
+        @keyframes dashFlow { to { stroke-dashoffset: -20; } }
+        .anim-flow-cloudy { animation: dashFlow 0.5s linear infinite; stroke: #94a3b8 !important; stroke-dasharray: 6, 4 !important; }
+        .anim-flow-sludge { animation: dashFlowSludge 0.8s linear infinite; stroke-dasharray: 12, 10 !important; }
+        @keyframes dashFlowSludge { to { stroke-dashoffset: -22; } }
+
+        /* Hardware Jacks */
+        .jack-container { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+        .jack { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #1e293b; box-shadow: inset 0 2px 4px rgba(0,0,0,0.9), 0 1px 1px rgba(255,255,255,0.1); position: relative; margin: 0 auto; background-color: #64748b; }
+        .jack::after { content: ''; position: absolute; top: 3px; left: 3px; right: 3px; bottom: 3px; border-radius: 50%; background-color: #020617; }
+        .jack.red { background-color: #ef4444; } .jack.yellow { background-color: #eab308; } .jack.blue { background-color: #3b82f6; } .jack.green { background-color: #22c55e; } .jack.purple { background-color: #a855f7; } .jack.cyan { background-color: #06b6d4; }
+        .jack-label { font-size: 0.55rem; font-weight: bold; color: #94a3b8; text-align: center; font-family: 'IBM Plex Mono';}
+
+        .wire-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+        .rt-box { fill: #0f172a; stroke: #334155; stroke-width: 1.5; rx: 4; }
+        .rt-text { font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: bold; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #020617; border-radius: 4px;}
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        @keyframes pulse-fast { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+        
+        #alarmPopup { backdrop-filter: blur(5px); }
+        .alarm-box { background: #020617; border: 4px solid var(--led-red); box-shadow: 0 0 40px rgba(239, 68, 68, 0.5); animation: shake 0.4s ease-in-out; }
+    </style>
+</head>
+<body>
+
+    <div id="alarmPopup" class="hidden fixed top-0 left-0 w-full h-full bg-black/80 z-[100] items-center justify-center">
+        <div class="alarm-box p-8 rounded-lg text-center max-w-lg">
+            <h2 class="text-4xl font-bold text-red-500 mb-4 tracking-widest font-mono">⚠️ SYSTEM INTERLOCK</h2>
+            <p id="alarmMsg" class="text-slate-200 text-lg font-mono mb-6 leading-relaxed">Pesan Alarm</p>
+            <button onclick="closeAlarm()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded border-2 border-red-400 shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all font-mono">ACKNOWLEDGE & RESET</button>
+        </div>
+    </div>
+
+    <div class="text-center mt-6 mb-4">
+        <h1 class="text-3xl font-black text-slate-200 tracking-widest drop-shadow-lg">ENTERPRISE ZLD SCADA</h1>
+        <p class="text-slate-400 font-bold mt-1 text-sm font-mono tracking-widest">10-CORE ARCHITECTURE HYBRID CONTROL</p>
+    </div>
+
+    <div class="text-center z-100 relative mb-4">
+        <button class="bg-slate-800 text-cyan-400 hover:bg-slate-700 font-bold py-2 px-6 rounded border border-slate-600 font-mono text-xs shadow-lg transition-all" onclick="toggleWires()">👁️ TOGGLE WIRING</button>
+    </div>
+
+    <div class="alu-frame" id="main-frame">
+        <svg id="wiring-layer" class="wire-svg"></svg>
+        <div class="flex gap-5 min-h-[480px]">
+            
+            <div class="acrylic-panel w-1/4 p-3 flex flex-col justify-between">
+                <div class="hc-led hc-green" id="hc-mod1" title="Modul 1 Health"></div>
+                <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+                <div class="panel-title">MODUL 1: CONTROL PANEL</div>
+                
+                <div class="flex-1 flex flex-col justify-between bg-slate-900 border border-slate-700 rounded-md p-3 shadow-inner">
+                    
+                    <div class="grid grid-cols-2 gap-4 items-end mb-4 border-b-2 border-slate-800 pb-5">
+                        <div class="text-center flex flex-col items-center">
+                            <div class="text-[10px] font-bold mb-3 text-slate-400 font-mono">MODE: AUTO</div>
+                            <div class="toggle-switch active" id="sw-auto" onclick="toggleMode()"><div class="toggle-knob"></div></div>
+                            <div class="jack-container mt-4"><div class="jack yellow" id="j-m1-auto"></div></div>
+                        </div>
+                        <div class="text-center flex flex-col items-center">
+                            <div class="text-[10px] font-bold mb-3 text-red-500 font-mono">SYSTEM ESTOP</div>
+                            <button class="btn-estop" id="sw-estop" onclick="triggerEstop()">STOP</button>
+                            <div class="jack-container mt-3"><div class="jack red" id="j-m1-estop"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="text-[10px] font-bold text-center mb-4 text-cyan-500 bg-slate-800 py-1.5 rounded font-mono border border-slate-700">10-CORE ACTUATOR OVERRIDE</div>
+                    
+                    <div class="grid grid-cols-5 gap-y-6 mb-4">
+                        <div class="flex flex-col items-center"><div class="text-[9px] font-bold text-slate-400 mb-2 font-mono">M-01</div><div class="toggle-switch" id="sw-m01" onclick="tglHw('M01')"><div class="toggle-knob"></div></div><div class="led yellow mt-3" id="led-hw-M01"></div></div>
+                        <div class="flex flex-col items-center"><div class="text-[9px] font-bold text-slate-400 mb-2 font-mono">P-03</div><div class="toggle-switch" id="sw-p03" onclick="tglHw('P03')"><div class="toggle-knob"></div></div><div class="led purple mt-3" id="led-hw-P03"></div></div>
+                        <div class="flex flex-col items-center"><div class="text-[9px] font-bold text-slate-400 mb-2 font-mono">V-01</div><div class="toggle-switch" id="sw-v01" onclick="tglHw('V01')"><div class="toggle-knob"></div></div><div class="led green mt-3" id="led-hw-V01"></div></div>
+                        <div class="flex flex-col items-center"><div class="text-[9px] font-bold text-slate-400 mb-2 font-mono">V-02</div><div class="toggle-switch" id="sw-v02" onclick="tglHw('V02')"><div class="toggle-knob"></div></div><div class="led green mt-3" id="led-hw-V02"></div></div>
+                        <div class="flex flex-col items-center"><div class="text-[9px] font-bold text-slate-400 mb-2 font-mono">P-02</div><div class="toggle-switch" id="sw-p02" onclick="tglHw('P02')"><div class="toggle-knob"></div></div><div class="led blue mt-3" id="led-hw-P02"></div></div>
+                        
+                        <div class="flex flex-col items-center"><div class="text-[9px] font-bold text-slate-400 mb-2 font-mono">P-01</div><div class="toggle-switch" id="sw-p01" onclick="tglHw('P01')"><div class="toggle-knob"></div></div><div class="led blue mt-3" id="led-hw-P01"></div></div>
+                        <div class="flex flex-col items-center"><div class="text-[9px] font-bold text-slate-400 mb-2 font-mono">SRV-1</div><div class="toggle-switch" id="sw-srv1" onclick="tglHw('SRV1')"><div class="toggle-knob"></div></div><div class="led purple mt-3" id="led-hw-SRV1"></div></div>
+                        <div class="flex flex-col items-center"><div class="text-[9px] font-bold text-slate-400 mb-2 font-mono">SRV-2</div><div class="toggle-switch" id="sw-srv2" onclick="tglHw('SRV2')"><div class="toggle-knob"></div></div><div class="led purple mt-3" id="led-hw-SRV2"></div></div>
+                        <div class="flex flex-col items-center"><div class="text-[9px] font-bold text-slate-400 mb-2 font-mono">PC-1</div><div class="toggle-switch" id="sw-pc1" onclick="tglHw('PC1')"><div class="toggle-knob"></div></div><div class="led cyan mt-3" id="led-hw-PC1"></div></div>
+                        <div class="flex flex-col items-center"><div class="text-[9px] font-bold text-slate-400 mb-2 font-mono">PC-2</div><div class="toggle-switch" id="sw-pc2" onclick="tglHw('PC2')"><div class="toggle-knob"></div></div><div class="led cyan mt-3" id="led-hw-PC2"></div></div>
+                    </div>
+
+                    <div class="mt-auto">
+                        <div class="border-t border-slate-700 pt-3 flex justify-between items-center bg-slate-950 p-2 rounded shadow-inner mb-3">
+                            <div class="flex flex-col">
+                                <span class="text-[10px] font-black text-slate-300 font-mono">EXTERNAL CONTROLLER BUS</span>
+                                <span class="text-[8px] font-bold text-slate-500 font-mono mt-0.5">Node: PC-1 & PC-2</span>
+                            </div>
+                            <div class="w-8 h-8 bg-slate-800 border-2 border-slate-600 rounded shadow-md flex flex-col items-center justify-center relative gap-1" id="j-m1-com">
+                                <div class="flex gap-1.5 mb-1">
+                                    <div class="w-2 h-2 rounded-full bg-slate-600 transition-all duration-75" id="led-m1-tx"></div>
+                                    <div class="w-2 h-2 rounded-full bg-slate-600 transition-all duration-75" id="led-m1-rx"></div>
+                                </div>
+                                <div class="w-4 h-1.5 bg-yellow-500 rounded-sm"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-around bg-slate-800 p-2 rounded border border-slate-700">
+                            <div class="jack-container"><div class="jack yellow" id="j-m1-m01"></div><span class="jack-label">M01</span></div>
+                            <div class="jack-container"><div class="jack purple" id="j-m1-p03"></div><span class="jack-label">P03</span></div>
+                            <div class="jack-container"><div class="jack green" id="j-m1-v01"></div><span class="jack-label">V01</span></div>
+                            <div class="jack-container"><div class="jack green" id="j-m1-v02"></div><span class="jack-label">V02</span></div>
+                            <div class="jack-container"><div class="jack blue" id="j-m1-p02"></div><span class="jack-label">P02</span></div>
+                            <div class="jack-container"><div class="jack blue" id="j-m1-p01"></div><span class="jack-label">P01</span></div>
+                            <div class="jack-container"><div class="jack purple" id="j-m1-srv1"></div><span class="jack-label">SR1</span></div>
+                            <div class="jack-container"><div class="jack purple" id="j-m1-srv2"></div><span class="jack-label">SR2</span></div>
+                            <div class="jack-container"><div class="jack cyan" id="j-m1-pc1"></div><span class="jack-label">PC1</span></div>
+                            <div class="jack-container"><div class="jack cyan" id="j-m1-pc2"></div><span class="jack-label">PC2</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="acrylic-panel w-2/4 p-3 relative z-20">
+                <div class="hc-led hc-green" id="hc-mod2"></div>
+                <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+                <div class="panel-title">MODUL 2: HMI HAIWELL 10" (COMMAND CENTER)</div>
+                
+                <div class="flex-1 flex items-center justify-center p-1.5 bg-slate-800 rounded-lg shadow-[0_0_20px_rgba(0,0,0,0.9)] border-4 border-[#020617] relative">
+                    <div class="absolute top-2 left-3 text-[9px] text-slate-500 tracking-widest z-10 font-mono font-bold">Haiwell IoT Cloud</div>
+                    
+                    <div class="hmi-box w-full h-full p-4 pt-6 relative overflow-hidden flex flex-col">
+                        
+                        <div class="text-center mb-4">
+                            <div class="text-[16px] font-black text-white tracking-widest border-b border-slate-800 pb-2 mb-3">COMMAND CENTER</div>
+                            <div id="sysBanner" class="mode-banner mode-auto">SYSTEM MODE: AUTO (FILTRATING)</div>
+                            <div class="font-bold text-cyan-400 font-mono text-[12px] mb-3" id="txtCountdown">NEXT AUTO MICRO BW: 1800 s</div>
+                            
+                            <div class="flex justify-center gap-3 max-w-[320px] mx-auto">
+                                <div class="flex-1 cursor-pointer border-2 border-blue-500 text-center text-white bg-blue-600 font-bold py-1.5 rounded text-[10px] transition-all" id="btnAuto" onclick="setMode('AUTO')">AUTO MODE</div>
+                                <div class="flex-1 cursor-pointer border-2 border-slate-600 text-center text-slate-400 bg-transparent font-bold py-1.5 rounded text-[10px] transition-all" id="btnMan" onclick="setMode('MANUAL')">MANUAL OVERRIDE</div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-1 w-full mb-3 border-b border-slate-800 flex-shrink-0">
+                            <button onclick="switchTab('micro')" id="tabMicro" class="hmi-nav-btn active">MICRO BW</button>
+                            <button onclick="switchTab('intake')" id="tabIntake" class="hmi-nav-btn">FLOW SETTINGS</button>
+                            <button onclick="switchTab('macro')" id="tabMacro" class="hmi-nav-btn">MACRO BW</button>
+                        </div>
+
+                        <div id="contentMicro" class="hmi-page active flex-1 flex-col overflow-y-auto pr-2 custom-scrollbar">
+                            
+                            <div class="flex justify-between items-center bg-[#0a1120] p-2.5 rounded border border-slate-800 mb-3">
+                                <span class="text-[9px] font-bold text-slate-400">PRESET:</span>
+                                <div class="flex gap-1.5">
+                                    <button class="bg-slate-800 border border-slate-600 text-slate-300 px-2 py-1 rounded text-[8px] font-bold hover:bg-slate-700 transition" onclick="loadPreset('default')">DEFAULT</button>
+                                    <button class="bg-slate-800 border border-slate-600 text-slate-300 px-2 py-1 rounded text-[8px] font-bold hover:bg-slate-700 transition" onclick="loadPreset('hemat')">HEMAT AIR</button>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between gap-3 mb-3">
+                                <div class="bg-[#0a1120] p-3 rounded border border-slate-800 flex-1 text-center">
+                                    <div class="text-[9px] text-cyan-400 mb-2 font-bold">AUTO TRIG INT (s)</div>
+                                    <input type="number" id="inpAutoMicroInt" class="inp-time w-full text-cyan-400 text-sm bg-transparent border-b border-slate-700" value="1800">
+                                </div>
+                                <div class="bg-[#0a1120] p-3 rounded border border-slate-800 flex-1 text-center">
+                                    <div class="text-[9px] text-yellow-400 mb-2 font-bold">MICRO BW DUR (s)</div>
+                                    <input type="number" id="tot_micro" class="inp-time w-full text-yellow-400 text-sm bg-transparent border-b border-slate-700" value="60">
+                                </div>
+                            </div>
+
+                            <div class="bg-blue-900/20 p-2.5 rounded border border-blue-900/50 mb-3 flex justify-between items-center">
+                                <span class="text-[9px] text-blue-300 font-bold">BW MIN LEVEL (m)</span>
+                                <input type="number" id="inpBwInterlock" class="inp-time text-blue-300 w-16" value="1.0" step="0.1">
+                            </div>
+                            
+                            <table class="timer-table mb-4">
+                                <tr><th>BW ACTUATOR</th><th>DUR(s)</th><th>INT(s)</th><th>DLY(s)</th></tr>
+                                <tr>
+                                    <td class="text-green-500 font-bold">V-01 OUTLET (Close)</td>
+                                    <td><input type="number" id="dur_V01" class="inp-time text-green-400" value="60"></td>
+                                    <td><input type="number" id="int_V01" class="inp-time text-green-400" value="0"></td>
+                                    <td><input type="number" id="dly_V01" class="inp-time text-green-400" value="0"></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-green-500 font-bold">V-02 BW ISOL</td>
+                                    <td><input type="number" id="dur_V02" class="inp-time text-green-400" value="60"></td>
+                                    <td><input type="number" id="int_V02" class="inp-time text-green-400" value="0"></td>
+                                    <td><input type="number" id="dly_V02" class="inp-time text-green-400" value="0"></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-cyan-400 font-bold">PC-1 SCOUR BLW</td>
+                                    <td><input type="number" id="dur_PC1" class="inp-time text-cyan-400" value="20"></td>
+                                    <td><input type="number" id="int_PC1" class="inp-time text-cyan-400" value="0"></td>
+                                    <td><input type="number" id="dly_PC1" class="inp-time text-cyan-400" value="0"></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-blue-400 font-bold">P-02 BCKWASH PUSH</td>
+                                    <td><input type="number" id="dur_P02" class="inp-time text-blue-400" value="40"></td>
+                                    <td><input type="number" id="int_P02" class="inp-time text-blue-400" value="0"></td>
+                                    <td><input type="number" id="dly_P02" class="inp-time text-blue-400" value="10"></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-purple-400 font-bold">SRV-1 SLUDGE L</td>
+                                    <td><input type="number" id="dur_SRV1" class="inp-time text-purple-400" value="50"></td>
+                                    <td><input type="number" id="int_SRV1" class="inp-time text-purple-400" value="0"></td>
+                                    <td><input type="number" id="dly_SRV1" class="inp-time text-purple-400" value="10"></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-purple-400 font-bold">SRV-2 SLUDGE R</td>
+                                    <td><input type="number" id="dur_SRV2" class="inp-time text-purple-400" value="50"></td>
+                                    <td><input type="number" id="int_SRV2" class="inp-time text-purple-400" value="0"></td>
+                                    <td><input type="number" id="dly_SRV2" class="inp-time text-purple-400" value="10"></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-blue-400 font-bold">P-01 IASE EVAC</td>
+                                    <td><input type="number" id="dur_P01" class="inp-time text-blue-400" value="50"></td>
+                                    <td><input type="number" id="int_P01" class="inp-time text-blue-400" value="0"></td>
+                                    <td><input type="number" id="dly_P01" class="inp-time text-blue-400" value="10"></td>
+                                </tr>
+                            </table>
+
+                            <div class="flex gap-3 mt-auto pb-1">
+                                <button class="btn-trig micro" onclick="trigSeq('MICRO')">▶ EXEC MICRO BW</button>
+                                <button class="btn-trig macro" onclick="trigSeq('MACRO')">⚠️ FORCE MACRO</button>
+                            </div>
+                        </div>
+
+                        <div id="contentIntake" class="hmi-page flex-1 flex-col overflow-y-auto pr-2 custom-scrollbar">
+                            
+                            <div class="bg-[#0a1120] p-3 rounded border border-blue-900/50 mb-4 text-center">
+                                <span class="text-[10px] text-blue-400 font-bold leading-relaxed block">
+                                    ℹ️ INFO: AERO-MIXER (PC-2) & SEEDING (P-03) terintegrasi otomatis dengan siklus Pompa Intake (M-01).
+                                </span>
+                            </div>
+
+                            <div class="bg-[#0a1120] p-4 rounded border border-slate-800 mb-4">
+                                <div class="text-[11px] font-bold text-slate-300 mb-4 border-b border-slate-700 pb-2 text-center tracking-widest">HYDRAULIC TARGET FLOWS (Lps)</div>
+                                <div class="grid grid-cols-1 gap-y-4">
+                                    <div class="flex justify-between items-center"><span class="text-[10px] text-yellow-500 font-bold">INTAKE (M-01)</span> <input type="number" id="inpM01Debit" class="inp-time text-yellow-500 w-20 text-sm" value="7.5" step="0.1"></div>
+                                    <div class="flex justify-between items-center"><span class="text-[10px] text-blue-500 font-bold">EVAC PUMP (P-01)</span> <input type="number" id="inpP01Debit" class="inp-time text-blue-500 w-20 text-sm" value="15.0" step="0.1"></div>
+                                    <div class="flex justify-between items-center"><span class="text-[10px] text-blue-500 font-bold">BW PUSH (P-02)</span> <input type="number" id="inpP02Debit" class="inp-time text-blue-500 w-20 text-sm" value="15.0" step="0.1"></div>
+                                    <div class="flex justify-between items-center"><span class="text-[10px] text-green-500 font-bold">OUTLET (V-01)</span> <input type="number" id="inpV01Debit" class="inp-time text-green-500 w-20 text-sm" value="7.5" step="0.1"></div>
+                                    <div class="flex justify-between items-center"><span class="text-[10px] text-purple-400 font-bold">SLUDGE (SRV 1/2)</span> <input type="number" id="inpSrvDebit" class="inp-time text-purple-400 w-20 text-sm" value="5.0" step="0.1"></div>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-3 mt-auto border-t border-slate-800 pt-4">
+                                <button class="btn-trig" style="background:#3b0764; color:#d8b4fe; border-color:#a855f7" onclick="forceSludge('SRV1')">🖐️ MANUAL FLUSH L</button>
+                                <button class="btn-trig" style="background:#3b0764; color:#d8b4fe; border-color:#a855f7" onclick="forceSludge('SRV2')">🖐️ MANUAL FLUSH R</button>
+                            </div>
+                        </div>
+
+                        <div id="contentMacro" class="hmi-page flex-1 flex-col justify-center px-3 custom-scrollbar">
+                            <div class="text-[14px] font-bold text-red-500 mb-5 text-center border-b border-red-900 pb-3 tracking-widest">MACRO BW MULTIPLIER</div>
+                            
+                            <div class="flex gap-3 mb-6">
+                                <div class="bg-[#0a1120] p-4 rounded border border-red-900/50 flex-1 text-center shadow-inner">
+                                    <div class="text-[10px] text-slate-400 font-bold mb-2">TOTAL CYCLES (X)</div>
+                                    <input type="number" id="tot_macro" class="inp-time text-2xl w-full text-red-500 bg-transparent border-b border-red-800 text-center py-2" value="5">
+                                </div>
+                                <div class="bg-[#0a1120] p-4 rounded border border-red-900/50 flex-1 text-center shadow-inner">
+                                    <div class="text-[10px] text-slate-400 font-bold mb-2">TRIGGER LEVEL (m)</div>
+                                    <input type="number" id="macro_trigger" step="0.1" class="inp-time text-2xl w-full text-yellow-500 bg-transparent border-b border-red-800 text-center py-2" value="1.8">
+                                </div>
+                            </div>
+                            
+                            <div class="w-full bg-slate-900 h-8 rounded-md border border-slate-700 mb-6 relative overflow-hidden shadow-inner">
+                                <div class="absolute inset-0 flex items-center justify-between px-3 z-10 text-[10px] text-white font-bold opacity-60">
+                                    <span>0.0m</span> <span id="lblTrendTrigger">1.8m (Trigger)</span> <span>3.0m</span>
+                                </div>
+                                <div id="trendBar" class="h-full bg-gradient-to-r from-blue-600 to-cyan-400 transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.8)]" style="width: 25%;"></div>
+                            </div>
+
+                            <div class="bg-red-950/20 border border-red-900/30 p-3 rounded text-center mb-5">
+                                <p class="text-[10px] text-red-300 leading-relaxed font-bold">
+                                    Siklus dipinjam dari pola Micro BW.<br>
+                                    ⚠️ Intake (M-01) & Aero-Mixer (PC-2) DIPAKSA MATI selama Macro BW berlangsung.
+                                </p>
+                            </div>
+                            
+                            <div class="font-bold text-[14px] text-red-400 text-center" id="countMacro" style="min-height: 25px;"></div>
+                        </div>
+                        
+                        <div id="statusBar" class="mt-auto border border-slate-700 bg-[#020617] rounded p-2.5 text-center text-[10px] font-bold text-green-400 shadow-inner flex-shrink-0 tracking-wide">
+                            SISTEM SIAGA. MENUNGGU INSTRUKSI.
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="acrylic-panel w-1/4 p-3 flex flex-col">
+                <div class="hc-led hc-green" id="hc-mod3"></div>
+                <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+                <div class="panel-title">MODUL 3: PLC CP2E</div>
+                
+                <div class="flex-1 flex flex-col bg-[#020617] rounded-md border-t-[6px] border-b-[6px] border-slate-800 p-4 shadow-inner relative">
+                    <div class="flex justify-between items-center mb-5 border-b-2 border-slate-700 pb-3">
+                        <span class="font-black tracking-widest text-[14px] text-slate-200 font-mono">OMRON CP2E</span>
+                        <div class="flex gap-4">
+                            <div class="text-center"><div class="w-3.5 h-3.5 rounded-full bg-slate-600 mb-1.5 shadow-inner" id="plc-pwr"></div><span class="text-[9px] text-slate-400 font-bold font-mono">PWR</span></div>
+                            <div class="text-center"><div class="w-3.5 h-3.5 rounded-full bg-slate-600 mb-1.5 shadow-inner" id="plc-run"></div><span class="text-[9px] text-slate-400 font-bold font-mono">RUN</span></div>
+                            <div class="text-center"><div class="w-3.5 h-3.5 rounded-full bg-slate-600 mb-1.5 shadow-inner" id="plc-err"></div><span class="text-[9px] text-slate-400 font-bold font-mono">ERR</span></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-5 border-b-2 border-slate-700 pb-4">
+                        <div class="text-[10px] text-slate-400 font-bold mb-3 bg-slate-800 py-1.5 text-center rounded font-mono tracking-widest">INPUT (CH 0)</div>
+                        <div class="flex justify-around">
+                            <div class="jack-container"><div class="jack yellow" id="j-plc-in-auto"></div><span class="jack-label">AUTO</span></div>
+                            <div class="jack-container"><div class="jack red" id="j-plc-in-estop"></div><span class="jack-label">ESTOP</span></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="text-[10px] text-slate-400 font-bold mb-3 bg-slate-800 py-1.5 text-center rounded font-mono tracking-widest">OUTPUT (CH 100) - 10 CORE</div>
+                        <div class="grid grid-cols-5 gap-3 p-4 bg-[#0a1120] rounded border border-slate-700 shadow-inner">
+                            <div class="text-center"><div class="w-5 h-5 bg-slate-800 rounded-sm mx-auto mb-1.5 border border-black shadow-inner transition-colors duration-200" id="ind-out-m01"></div><span class="text-[8px] text-slate-400 font-bold font-mono">M01</span></div>
+                            <div class="text-center"><div class="w-5 h-5 bg-slate-800 rounded-sm mx-auto mb-1.5 border border-black shadow-inner transition-colors duration-200" id="ind-out-p03"></div><span class="text-[8px] text-slate-400 font-bold font-mono">P03</span></div>
+                            <div class="text-center"><div class="w-5 h-5 bg-slate-800 rounded-sm mx-auto mb-1.5 border border-black shadow-inner transition-colors duration-200" id="ind-out-v01"></div><span class="text-[8px] text-slate-400 font-bold font-mono">V01</span></div>
+                            <div class="text-center"><div class="w-5 h-5 bg-slate-800 rounded-sm mx-auto mb-1.5 border border-black shadow-inner transition-colors duration-200" id="ind-out-v02"></div><span class="text-[8px] text-slate-400 font-bold font-mono">V02</span></div>
+                            <div class="text-center"><div class="w-5 h-5 bg-slate-800 rounded-sm mx-auto mb-1.5 border border-black shadow-inner transition-colors duration-200" id="ind-out-p02"></div><span class="text-[8px] text-slate-400 font-bold font-mono">P02</span></div>
+                            
+                            <div class="text-center"><div class="w-5 h-5 bg-slate-800 rounded-sm mx-auto mb-1.5 border border-black shadow-inner transition-colors duration-200" id="ind-out-p01"></div><span class="text-[8px] text-slate-400 font-bold font-mono">P01</span></div>
+                            <div class="text-center"><div class="w-5 h-5 bg-slate-800 rounded-sm mx-auto mb-1.5 border border-black shadow-inner transition-colors duration-200" id="ind-out-srv1"></div><span class="text-[8px] text-slate-400 font-bold font-mono">SR1</span></div>
+                            <div class="text-center"><div class="w-5 h-5 bg-slate-800 rounded-sm mx-auto mb-1.5 border border-black shadow-inner transition-colors duration-200" id="ind-out-srv2"></div><span class="text-[8px] text-slate-400 font-bold font-mono">SR2</span></div>
+                            <div class="text-center"><div class="w-5 h-5 bg-slate-800 rounded-sm mx-auto mb-1.5 border border-black shadow-inner transition-colors duration-200" id="ind-out-pc1"></div><span class="text-[8px] text-slate-400 font-bold font-mono">PC1</span></div>
+                            <div class="text-center"><div class="w-5 h-5 bg-slate-800 rounded-sm mx-auto mb-1.5 border border-black shadow-inner transition-colors duration-200" id="ind-out-pc2"></div><span class="text-[8px] text-slate-400 font-bold font-mono">PC2</span></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto">
+                        <div class="mb-3 flex justify-between items-center bg-[#0a1120] p-2.5 rounded border border-slate-700">
+                            <div class="flex flex-col">
+                                <span class="text-[10px] font-bold text-slate-300 font-mono">RS485 COM PORT</span>
+                                <span class="text-[8px] text-slate-500 font-mono">Modbus RTU</span>
+                            </div>
+                            <div class="w-8 h-8 bg-slate-800 border-2 border-slate-600 rounded shadow-md flex flex-col items-center justify-center relative gap-1">
+                                <div class="flex gap-1.5 mb-1">
+                                    <div class="w-2 h-2 rounded-full bg-slate-600 transition-all duration-75" id="led-plc-tx"></div>
+                                    <div class="w-2 h-2 rounded-full bg-slate-600 transition-all duration-75" id="led-plc-rx"></div>
+                                </div>
+                                <div class="w-4 h-1.5 bg-yellow-500 rounded-sm"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-around bg-slate-900 p-2 rounded border border-slate-800">
+                            <div class="jack-container"><div class="jack yellow" id="j-plc-m01"></div><span class="jack-label">M01</span></div>
+                            <div class="jack-container"><div class="jack purple" id="j-plc-p03"></div><span class="jack-label">P03</span></div>
+                            <div class="jack-container"><div class="jack green" id="j-plc-v01"></div><span class="jack-label">V01</span></div>
+                            <div class="jack-container"><div class="jack green" id="j-plc-v02"></div><span class="jack-label">V02</span></div>
+                            <div class="jack-container"><div class="jack blue" id="j-plc-p02"></div><span class="jack-label">P02</span></div>
+                            <div class="jack-container"><div class="jack blue" id="j-plc-p01"></div><span class="jack-label">P01</span></div>
+                            <div class="jack-container"><div class="jack purple" id="j-plc-srv1"></div><span class="jack-label">SR1</span></div>
+                            <div class="jack-container"><div class="jack purple" id="j-plc-srv2"></div><span class="jack-label">SR2</span></div>
+                            <div class="jack-container"><div class="jack cyan" id="j-plc-pc1"></div><span class="jack-label">PC1</span></div>
+                            <div class="jack-container"><div class="jack cyan" id="j-plc-pc2"></div><span class="jack-label">PC2</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="horizontal-bar"></div>
+
+        <div class="acrylic-panel w-full p-3">
+            <div class="hc-led hc-green" id="hc-mod4" title="Modul 4 Health"></div>
+            <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+            <div class="panel-title">MODUL 4: DIGITAL TWIN P&ID & DIAGNOSTICS</div>
+            
+            <div class="bg-[#020617] border border-slate-600 rounded-lg h-[450px] relative overflow-hidden flex items-center justify-center p-2 shadow-inner mb-4">
+                
+                <div class="absolute top-3 left-4 z-30">
+                    <h2 class="text-white text-xl font-black tracking-widest border-b-2 border-cyan-500 pb-1 font-mono">LIVE P&ID</h2>
+                    <div class="text-xs text-slate-400 mt-1 font-mono">ZLD Flow Architecture</div>
+                </div>
+
+                <div class="absolute top-4 right-4 font-mono text-yellow-400 font-bold text-lg bg-black px-3 py-1.5 border border-slate-700 rounded z-20 shadow-[0_0_10px_rgba(0,0,0,0.8)]" id="txtLevel">GSF: 0.70m</div>
+                
+                <div class="absolute top-20 left-4 z-20 flex flex-col gap-3 font-mono">
+                    <div class="bg-black/80 border border-slate-700 rounded p-2 flex items-center gap-2 shadow-lg backdrop-blur-sm">
+                        <div class="w-3 h-3 rounded-full bg-slate-700" id="led-ind01-sup"></div>
+                        <span class="text-xs text-orange-400 font-bold">AIT-01 (TURBIDITY): <span id="txtTurbSup" class="text-white">--</span> NTU</span>
+                    </div>
+                    <div class="bg-black/80 border border-slate-700 rounded p-2 flex items-center gap-2 shadow-lg backdrop-blur-sm">
+                        <div class="w-3 h-3 rounded-full bg-slate-700" id="led-ind02-sup"></div>
+                        <span class="text-xs text-orange-400 font-bold">AIT-02 (TURBIDITY): <span id="txtTurbOut" class="text-white">--</span> NTU</span>
+                    </div>
+                    <div class="bg-black/80 border border-slate-700 rounded p-2 flex items-center gap-2 shadow-lg backdrop-blur-sm">
+                        <div class="w-3 h-3 rounded-full bg-slate-700" id="led-ind-fit"></div>
+                        <span class="text-xs text-cyan-400 font-bold">OUTLET FLOW (FIT-01): <span id="txtFlowP1" class="text-white">--</span> Lps</span>
+                    </div>
+                </div>
+                
+                <svg width="100%" height="100%" viewBox="-10 10 820 400" class="w-full h-full object-contain pt-10 svg-blueprint">
+                    
+                    <defs>
+                        <clipPath id="hrsClip"><polygon points="360,90 440,90 440,210 420,280 380,280 360,210" /></clipPath>
+                    </defs>
+
+                    <g transform="translate(10, 240)">
+                        <rect class="rt-box" width="55" height="18" />
+                        <text class="rt-text" fill="#eab308" id="rt-intake" x="27.5" y="12" text-anchor="middle">0.0 Lps</text>
+                    </g>
+                    <g transform="translate(565, 8)">
+                        <rect class="rt-box" width="55" height="18" />
+                        <text class="rt-text" fill="#3b82f6" id="rt-p01" x="27.5" y="12" text-anchor="middle">0.0 Lps</text>
+                    </g>
+                    <g transform="translate(425, 375)">
+                        <rect class="rt-box" width="55" height="18" />
+                        <text class="rt-text" fill="#3b82f6" id="rt-p02" x="27.5" y="12" text-anchor="middle">0.0 Lps</text>
+                    </g>
+                    <g transform="translate(615, 295)">
+                        <rect class="rt-box" width="55" height="18" />
+                        <text class="rt-text" fill="#22c55e" id="rt-v01" x="27.5" y="12" text-anchor="middle">0.0 Lps</text>
+                    </g>
+                    <g transform="translate(385, 335)">
+                        <rect class="rt-box" width="55" height="18" />
+                        <text class="rt-text" fill="#a855f7" id="rt-srv" x="27.5" y="12" text-anchor="middle">0.0 Lps</text>
+                    </g>
+
+                    <text x="0" y="280" fill="#f8fafc" font-size="9" font-weight="bold" font-family="monospace">POND</text>
+                    <rect x="0" y="290" width="35" height="100" fill="none" stroke="#475569" stroke-width="2"/>
+                    <rect x="0" y="310" width="35" height="80" fill="#3b82f6" opacity="0.2"/>
+
+                    <path id="pipeM01" d="M 35 360 L 100 360 L 100 50 L 170 50 L 170 90" fill="none" stroke="#475569" stroke-width="5" stroke-dasharray="8,4" stroke-linejoin="round"/>
+                    <text x="45" y="345" fill="#eab308" font-size="8" font-weight="bold" font-family="monospace">M-01 INTAKE</text>
+                    <polygon id="picM01" points="60,350 80,350 70,370" fill="var(--led-off)"/>
+                    <text x="95" y="190" fill="#cbd5e1" font-size="8" font-weight="bold" transform="rotate(-90 95 190)">RAW HEADER</text>
+
+                    <text x="45" y="10" fill="#a855f7" font-size="6" font-weight="bold" font-family="monospace">SEED TANK</text>
+                    <rect x="45" y="15" width="20" height="20" fill="none" stroke="#475569" stroke-width="2"/>
+                    <rect x="45" y="25" width="20" height="10" fill="#a855f7" opacity="0.3"/>
+                    <rect id="picP03" x="70" y="20" width="10" height="10" fill="var(--led-off)" rx="2"/>
+                    <text x="72" y="38" fill="#a855f7" font-size="6" font-weight="bold" font-family="monospace">P03</text>
+                    <path id="pipeP03" d="M 65 25 L 70 25 M 80 25 L 100 25" fill="none" stroke="#475569" stroke-width="3" stroke-dasharray="4,2" stroke-linejoin="round"/>
+
+                    <rect x="140" y="90" width="180" height="180" fill="none" stroke="#475569" stroke-width="3"/>
+                    <rect id="svgFlocWater" x="140" y="120" width="180" height="150" fill="#a855f7" opacity="0.2" style="transition: all 0.5s linear;"/>
+                    
+                    <line x1="160" y1="90" x2="160" y2="240" stroke="#475569" stroke-width="2"/>
+                    <line x1="200" y1="90" x2="200" y2="240" stroke="#475569" stroke-width="2"/>
+                    <line x1="240" y1="90" x2="240" y2="240" stroke="#475569" stroke-width="2"/>
+                    <line x1="280" y1="90" x2="280" y2="240" stroke="#475569" stroke-width="2"/>
+                    <line x1="180" y1="120" x2="180" y2="270" stroke="#475569" stroke-width="2"/>
+                    <line x1="220" y1="120" x2="220" y2="270" stroke="#475569" stroke-width="2"/>
+                    <line x1="260" y1="120" x2="260" y2="270" stroke="#475569" stroke-width="2"/>
+                    <line x1="300" y1="120" x2="300" y2="270" stroke="#475569" stroke-width="2"/>
+
+                    <rect id="picPC2" x="220" y="275" width="20" height="10" fill="var(--led-off)" rx="2"/>
+                    <text x="245" y="283" fill="#06b6d4" font-size="8" font-weight="bold" font-family="monospace">PC-2 AERO</text>
+                    <g id="flocBubbles"></g>
+
+                    <path id="pipeFlocToHrs" d="M 320 120 L 360 140" fill="none" stroke="#475569" stroke-width="5" stroke-dasharray="6,4" stroke-linejoin="round"/>
+                    <path id="pipeHrsToGsf" d="M 440 110 L 490 110" fill="none" stroke="#475569" stroke-width="5" stroke-dasharray="6,4" stroke-linejoin="round"/>
+
+                    <g clip-path="url(#hrsClip)">
+                        <polygon points="360,210 380,280 420,280 440,210" fill="#581c87" opacity="0.5"/>
+                        <rect id="svgHrsWater" x="360" y="160" width="80" height="120" fill="#a855f7" opacity="0.2" style="transition: all 0.5s linear;"/>
+                    </g>
+                    <polygon points="360,90 440,90 440,210 420,280 380,280 360,210" fill="none" stroke="#475569" stroke-width="3"/>
+                    <text x="388" y="180" fill="#cbd5e1" font-family="monospace" font-size="12" font-weight="bold">HRS</text>
+
+                    <path id="pipeHrsDrain" d="M 400 280 L 400 320" fill="none" stroke="#475569" stroke-width="6" stroke-linecap="round" />
+                    <path id="pipeSRV1" d="M 400 320 L 370 320" fill="none" stroke="#475569" stroke-width="6" stroke-linecap="round" />
+                    <path id="pipeSRV2" d="M 400 320 L 430 320" fill="none" stroke="#475569" stroke-width="6" stroke-linecap="round" />
+                    <circle id="picSRV1" cx="370" cy="320" r="7" fill="var(--led-off)"/>
+                    <circle id="picSRV2" cx="430" cy="320" r="7" fill="var(--led-off)"/>
+                    <text x="350" y="338" fill="#a855f7" font-size="8" font-weight="bold" font-family="monospace">SRV-1</text>
+                    <text x="420" y="338" fill="#a855f7" font-size="8" font-weight="bold" font-family="monospace">SRV-2</text>
+
+                    <rect x="490" y="50" width="120" height="250" fill="none" stroke="#475569" stroke-width="3"/>
+                    
+                    <line x1="610" y1="50" x2="635" y2="50" stroke="#334155" stroke-width="1" stroke-dasharray="5,5"/>
+                    <text x="640" y="53" fill="#94a3b8" font-size="9" font-family="monospace">3.0m</text>
+                    
+                    <line x1="610" y1="75" x2="635" y2="75" stroke="#334155" stroke-width="1" stroke-dasharray="5,5"/>
+                    <text x="640" y="78" fill="#94a3b8" font-size="9" font-family="monospace">2.7m</text>
+
+                    <rect x="490" y="190" width="120" height="60" fill="#b45309" opacity="0.5"/> 
+                    <rect x="490" y="250" width="120" height="50" fill="var(--led-cyan)" opacity="0.2"/> 
+                    <rect id="svgWater" x="490" y="140" width="120" height="50" fill="var(--led-blue)" opacity="0.3" style="transition: all 0.2s linear;"/>
+                    <text x="515" y="40" fill="#cbd5e1" font-size="12" font-weight="bold" font-family="monospace">GSF</text>
+                    
+                    <text id="txtLevelSvg" x="515" y="135" fill="#facc15" font-size="10" font-weight="bold" font-family="monospace">GSF: 0.70m</text>
+
+                    <line x1="500" y1="160" x2="600" y2="160" stroke="#475569" stroke-width="3" stroke-dasharray="4,4"/>
+                    <path id="pipeP01Suct" d="M 550 160 L 550 145" fill="none" stroke="#475569" stroke-width="4" stroke-dasharray="6,4" stroke-linejoin="round"/>
+                    <rect id="picP01" x="540" y="125" width="20" height="20" fill="var(--led-off)" rx="3"/>
+                    <text x="565" y="135" fill="#3b82f6" font-size="8" font-weight="bold" font-family="monospace">P-01</text>
+                    <path id="pipeP01Disc" d="M 550 125 L 550 20 L 150 20 L 150 90" fill="none" stroke="#475569" stroke-width="4" stroke-dasharray="6,4" stroke-linejoin="round"/>
+
+                    <line x1="510" y1="285" x2="590" y2="285" stroke="#475569" stroke-width="3"/>
+                    <rect id="picPC1" x="540" y="280" width="20" height="10" fill="var(--led-off)" rx="2"/>
+                    <text x="543" y="298" fill="#06b6d4" font-size="7" font-weight="bold" font-family="monospace">PC-1</text>
+                    <g id="gsfBubbles"></g>
+
+                    <g transform="translate(470, 85)">
+                        <circle cx="0" cy="0" r="12" fill="#020617" stroke="#f97316" stroke-width="2"/>
+                        <text x="-10" y="3" fill="#f97316" font-size="7" font-weight="bold" font-family="monospace">AIT1</text>
+                        <line x1="0" y1="12" x2="0" y2="25" stroke="#f97316" stroke-width="2"/>
+                    </g>
+
+                    <path id="pipeP02" d="M 500 360 L 500 300" fill="none" stroke="#475569" stroke-width="5" stroke-dasharray="6,4" stroke-linejoin="round"/>
+                    <rect id="picP02" x="490" y="360" width="20" height="15" fill="var(--led-off)" rx="2"/>
+                    <text x="475" y="388" fill="#3b82f6" font-size="8" font-weight="bold" font-family="monospace">P-02 BW</text>
+
+                    <circle id="picV02" cx="500" cy="330" r="7" fill="var(--led-off)"/>
+                    <text x="512" y="333" fill="#22c55e" font-size="8" font-weight="bold" font-family="monospace">V-02</text>
+
+                    <path id="pipeOut" d="M 610 280 L 760 280 L 760 300" fill="none" stroke="#475569" stroke-width="5" stroke-dasharray="6,4" stroke-linejoin="round"/>
+                    
+                    <circle id="picV01" cx="630" cy="280" r="8" fill="var(--led-off)"/>
+                    <text x="615" y="265" fill="#22c55e" font-size="8" font-weight="bold" font-family="monospace">V-01 (NO)</text>
+
+                    <g transform="translate(670, 255)">
+                        <circle cx="0" cy="0" r="12" fill="#020617" stroke="#f97316" stroke-width="2"/>
+                        <text x="-10" y="3" fill="#f97316" font-size="7" font-weight="bold" font-family="monospace">AIT2</text>
+                        <line x1="0" y1="12" x2="0" y2="25" stroke="#f97316" stroke-width="2"/>
+                    </g>
+
+                    <g transform="translate(710, 260)">
+                        <circle cx="0" cy="0" r="12" fill="#020617" stroke="#22d3ee" stroke-width="2"/>
+                        <text x="-9" y="3" fill="#22d3ee" font-size="7" font-weight="bold" font-family="monospace">FIT</text>
+                    </g>
+
+                    <rect x="730" y="300" width="70" height="90" fill="none" stroke="#475569" stroke-width="3"/>
+                    <rect x="730" y="330" width="70" height="60" fill="#2563eb" opacity="0.4"/>
+                    <text x="736" y="295" fill="#94a3b8" font-size="9" font-weight="bold" font-family="monospace">RESERVOIR</text>
+
+                </svg>
+            </div>
+
+            <div class="panel-title" style="margin-top: 5px; margin-bottom: 5px; border-bottom:none; border-top:2px solid #334155; padding-top:10px;">LIVE DIAGNOSTIC MATRIX (10 CORE)</div>
+            <div class="w-full bg-[#020617] border border-slate-700 rounded-lg overflow-hidden shadow-inner flex flex-col">
+                <table class="w-full text-left border-collapse font-mono text-[10px]">
+                    <thead class="bg-slate-900 text-slate-400 border-b-2 border-slate-700 shadow-md">
+                        <tr>
+                            <th class="p-2.5 tracking-wider pl-4">TAG</th>
+                            <th class="p-2.5 tracking-wider">DESCRIPTION</th>
+                            <th class="p-2.5 text-center tracking-wider">PLC LOGIC</th>
+                            <th class="p-2.5 text-center tracking-wider">PHYSICAL STATE</th>
+                            <th class="p-2.5 text-center tracking-wider">MODE</th>
+                            <th class="p-2.5 text-right tracking-wider pr-4">VALUE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="diag-tbody" class="text-slate-300">
+                        </tbody>
+                </table>
             </div>
             
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="group relative overflow-hidden rounded-lg bg-slate-900 text-white">
-                    <div class="p-8 border-l-4 border-emerald-500">
-                        <p class="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-2">PDAM Tirtanadi Sunggal</p>
-                        <h4 class="text-xl font-bold mb-4">WTP & SCADA Integration</h4>
-                        <p class="text-sm text-slate-400 mb-6">Pembangunan Clarifier baru dan Uprating sistem dengan kapasitas total 500 LPS di Medan.</p>
-                        <div class="flex justify-between items-center border-t border-white/10 pt-4">
-                            <span class="text-xs font-mono uppercase text-emerald-500">Kapasitas: 500 LPS</span>
-                            <span class="text-xs text-slate-500 italic">2013-2014</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="group relative overflow-hidden rounded-lg bg-slate-900 text-white">
-                    <div class="p-8 border-l-4 border-emerald-500">
-                        <p class="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-2">PDAM Tirta Asasta Depok</p>
-                        <h4 class="text-xl font-bold mb-4">Uprating WTP Site Legong</h4>
-                        <p class="text-sm text-slate-400 mb-6">Modernisasi dan peningkatan kapasitas produksi air minum dari 150 LPS menjadi 300 LPS.</p>
-                        <div class="flex justify-between items-center border-t border-white/10 pt-4">
-                            <span class="text-xs font-mono uppercase text-emerald-500">Kapasitas: 300 LPS</span>
-                            <span class="text-xs text-slate-500 italic">2016</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="group relative overflow-hidden rounded-lg bg-slate-900 text-white">
-                    <div class="p-8 border-l-4 border-emerald-500">
-                        <p class="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-2">Kawasan Industri Wijaya Kusuma</p>
-                        <h4 class="text-xl font-bold mb-4">Industrial SPAM Development</h4>
-                        <p class="text-sm text-slate-400 mb-6">Pembangunan baru Sistem Penyediaan Air Minum (WTP Lengkap) untuk mendukung operasional kawasan industri.</p>
-                        <div class="flex justify-between items-center border-t border-white/10 pt-4">
-                            <span class="text-xs font-mono uppercase text-emerald-500">Kapasitas: 50 LPS</span>
-                            <span class="text-xs text-slate-500 italic">2017-2018</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="group relative overflow-hidden rounded-lg bg-slate-900 text-white">
-                    <div class="p-8 border-l-4 border-emerald-500">
-                        <p class="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-2">PT Petro Kimia Gresik</p>
-                        <h4 class="text-xl font-bold mb-4">SPAM Gunung Sari</h4>
-                        <p class="text-sm text-slate-400 mb-6">Pembangunan baru infrastruktur air skala besar untuk mendukung kebutuhan industri kimia nasional.</p>
-                        <div class="flex justify-between items-center border-t border-white/10 pt-4">
-                            <span class="text-xs font-mono uppercase text-emerald-500">Kapasitas: 500 LPS</span>
-                            <span class="text-xs text-slate-500 italic">2016</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="group relative overflow-hidden rounded-lg bg-slate-900 text-white">
-                    <div class="p-8 border-l-4 border-emerald-500">
-                        <p class="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-2">Industrial Water Recycling</p>
-                        <h4 class="text-xl font-bold mb-4">IPAL to IPA Conversion</h4>
-                        <p class="text-sm text-slate-400 mb-6">Rekayasa teknologi konversi air limbah menjadi air bersih untuk efisiensi operasional industri.</p>
-                        <div class="flex justify-between items-center border-t border-white/10 pt-4">
-                            <span class="text-xs font-mono uppercase text-emerald-500">High-Tech Recycling</span>
-                            <span class="text-xs text-slate-500 italic">Expertise</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="group relative overflow-hidden rounded-lg bg-emerald-800 text-white">
-                    <div class="p-8 border-l-4 border-white">
-                        <p class="text-white text-xs font-bold uppercase tracking-widest mb-2">Next-Gen Technology</p>
-                        <h4 class="text-xl font-bold mb-4">Invila™ SACF Implementation</h4>
-                        <p class="text-sm text-emerald-100 mb-6">Penerapan teknologi Smart Aero-Carbon Filter untuk efisiensi filtrasi di kawasan industri modern.</p>
-                        <div class="flex justify-between items-center border-t border-white/10 pt-4">
-                            <span class="text-xs font-mono uppercase text-white tracking-widest">Active Innovation</span>
-                            <span class="text-xs text-emerald-200 italic">2026</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
-    </section>
+    </div>
+
+<script>
+    // --- 1. WIRING SIMULATION ---
+    let wiresVisible = false;
+    const svgLayer = document.getElementById('wiring-layer');
+    const connections = [
+        { from: 'j-m1-auto', to: 'j-plc-in-auto', color: 'rgba(234, 179, 8, 0.85)', drop: 60 },
+        { from: 'j-m1-estop', to: 'j-plc-in-estop', color: 'rgba(239, 68, 68, 0.85)', drop: 80 },
+        { from: 'j-plc-m01', to: 'j-m1-m01', color: 'rgba(234, 179, 8, 0.85)', drop: -100 },
+        { from: 'j-plc-p03', to: 'j-m1-p03', color: 'rgba(168, 85, 247, 0.85)', drop: -110 },
+        { from: 'j-plc-v01', to: 'j-m1-v01', color: 'rgba(34, 197, 94, 0.85)', drop: -120 },
+        { from: 'j-plc-v02', to: 'j-m1-v02', color: 'rgba(34, 197, 94, 0.85)', drop: -130 },
+        { from: 'j-plc-p02', to: 'j-m1-p02', color: 'rgba(59, 130, 246, 0.85)', drop: -140 },
+        { from: 'j-plc-p01', to: 'j-m1-p01', color: 'rgba(59, 130, 246, 0.85)', drop: -150 },
+        { from: 'j-plc-srv1', to: 'j-m1-srv1', color: 'rgba(168, 85, 247, 0.85)', drop: -160 },
+        { from: 'j-plc-srv2', to: 'j-m1-srv2', color: 'rgba(168, 85, 247, 0.85)', drop: -170 },
+        { from: 'j-plc-pc1', to: 'j-m1-pc1', color: 'rgba(6, 182, 212, 0.85)', drop: -180 },
+        { from: 'j-plc-pc2', to: 'j-m1-pc2', color: 'rgba(6, 182, 212, 0.85)', drop: -190 },
+        { from: 'j-plc-com', to: 'j-m1-com', color: 'rgba(255, 255, 255, 0.7)', drop: 220, width: 6, dash: '8, 4' }
+    ];
+
+    function drawAllWires() {
+        if(!svgLayer) return;
+        svgLayer.innerHTML = ''; 
+        if (!wiresVisible) return;
+        const svgRect = svgLayer.getBoundingClientRect();
+        
+        connections.forEach(conn => {
+            const el1 = document.getElementById(conn.from);
+            const el2 = document.getElementById(conn.to);
+            if (!el1 || !el2) return; 
+            
+            const r1 = el1.getBoundingClientRect();
+            const r2 = el2.getBoundingClientRect();
+            const x1 = (r1.left + r1.width / 2) - svgRect.left;
+            const y1 = (r1.top + r1.height / 2) - svgRect.top;
+            const x2 = (r2.left + r2.width / 2) - svgRect.left;
+            const y2 = (r2.top + r2.height / 2) - svgRect.top;
+            const controlY = Math.max(y1, y2) + conn.drop; 
+            const dPath = `M ${x1} ${y1} Q ${(x1 + x2) / 2} ${controlY} ${x2} ${y2}`;
+            
+            const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            shadow.setAttribute('d', dPath); shadow.setAttribute('stroke', 'rgba(0,0,0,0.6)'); shadow.setAttribute('stroke-width', (conn.width || 4) + 2); shadow.setAttribute('fill', 'none'); shadow.setAttribute('transform', 'translate(0, 4)');
+            
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', dPath); 
+            path.setAttribute('stroke', conn.color); 
+            path.setAttribute('stroke-width', conn.width || '4'); 
+            path.setAttribute('fill', 'none'); 
+            path.setAttribute('stroke-linecap', 'round');
+            if (conn.dash) path.setAttribute('stroke-dasharray', conn.dash);
+            
+            svgLayer.appendChild(shadow); svgLayer.appendChild(path);
+        });
+    }
+    function toggleWires() { wiresVisible = !wiresVisible; drawAllWires(); }
+    window.addEventListener('resize', drawAllWires);
+    setTimeout(drawAllWires, 500); 
+
+    // --- 2. HMI TABS & PRESETS ---
+    function switchTab(tab) {
+        document.querySelectorAll('.hmi-nav-btn').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.hmi-page').forEach(el => el.classList.remove('active'));
+        let tabMap = {'micro': 'tabMicro', 'macro': 'tabMacro', 'intake': 'tabIntake'};
+        let contentMap = {'micro': 'contentMicro', 'macro': 'contentMacro', 'intake': 'contentIntake'};
+        document.getElementById(tabMap[tab]).classList.add('active'); 
+        document.getElementById(contentMap[tab]).classList.add('active');
+    }
+
+    const presetData = {
+        'default': { microInt: 1800, microDur: 60, macroTot: 5, m01Flow: 7.5, p01Flow: 15.0, p02Flow: 15.0, v01Flow: 7.5, srvFlow: 5.0, macroTrigger: 1.8, bwLevel: 1.0, v01: {dur:60, int:0, dly:0}, v02: {dur:60, int:0, dly:0}, pc1: {dur:20, int:0, dly:0}, p02: {dur:40, int:0, dly:10}, srv1: {dur:50, int:0, dly:10}, srv2: {dur:50, int:0, dly:10}, p01: {dur:50, int:0, dly:10} },
+        'hemat': { microInt: 3600, microDur: 45, macroTot: 3, m01Flow: 5.5, p01Flow: 10.0, p02Flow: 10.0, v01Flow: 5.5, srvFlow: 3.5, macroTrigger: 2.0, bwLevel: 0.8, v01: {dur:45, int:0, dly:0}, v02: {dur:45, int:0, dly:0}, pc1: {dur:15, int:0, dly:0}, p02: {dur:30, int:0, dly:15}, srv1: {dur:35, int:0, dly:10}, srv2: {dur:35, int:0, dly:10}, p01: {dur:35, int:0, dly:10} }
+    };
+
+    function loadPreset(type) {
+        if(isEstop) return;
+        const p = presetData[type]; if(!p) return;
+        const setV = (id, v) => { if(document.getElementById(id)) document.getElementById(id).value = v; };
+        
+        setV('inpAutoMicroInt', p.microInt); setV('tot_micro', p.microDur); setV('tot_macro', p.macroTot);
+        setV('inpM01Debit', p.m01Flow); setV('inpP01Debit', p.p01Flow); setV('inpP02Debit', p.p02Flow); setV('inpV01Debit', p.v01Flow); setV('inpSrvDebit', p.srvFlow); setV('macro_trigger', p.macroTrigger);
+        if(document.getElementById('inpBwInterlock')) setV('inpBwInterlock', p.bwLevel);
+
+        ['V01', 'V02', 'PC1', 'P02', 'SRV1', 'SRV2', 'P01'].forEach(k => {
+            let key = k.toLowerCase().replace('-','');
+            if(p[key]) { setV(`dur_${k}`, p[key].dur); setV(`int_${k}`, p[key].int); setV(`dly_${k}`, p[key].dly); }
+        });
+        autoMicroCountdown = p.microInt;
+        updateNarrative(`PRESET [${type.toUpperCase()}] DIMUAT.`, "text-blue-400");
+    }
+
+    // --- 3. CORE SCADA LOGIC (10 ACTUATORS) ---
+    let mode = 'AUTO';       
+    let state = 'FILTRATING'; 
+    let simRad = 0.70; 
+    let activeTimer = 0; 
+    let isEstop = false;
+    let autoMicroCountdown = 1800; 
+
+    // Logical PLC Outputs (1 = ON, 0 = OFF)
+    let hw = { M01: false, P03: false, V01: false, V02: false, P02: false, P01: false, SRV1: false, SRV2: false, PC1: false, PC2: false };
+
+    function updateNarrative(msg, colorClass) {
+        document.getElementById('statusBar').innerText = msg;
+        document.getElementById('statusBar').className = `mt-auto border border-slate-700 bg-[#020617] rounded p-2.5 text-center text-[10px] font-bold shadow-inner flex-shrink-0 tracking-wide ${colorClass}`;
+    }
+
+    function triggerEstop(forceState = null) {
+        isEstop = forceState !== null ? forceState : !isEstop;
+        if(isEstop) {
+            document.getElementById('sw-estop').classList.add('pressed');
+            mode = 'MANUAL'; document.getElementById('sw-auto').classList.remove('active');
+            Object.keys(hw).forEach(k => hw[k] = false);
+            updateBanner("EMERGENCY STOP ACTIVATED", "mode-macro");
+        } else {
+            document.getElementById('sw-estop').classList.remove('pressed');
+            updateBanner("SYSTEM MODE: MANUAL OVERRIDE", "mode-manual");
+        }
+        updateVisuals();
+    }
+
+    function triggerAlarm(msg) { triggerEstop(true); document.getElementById('alarmMsg').innerText = msg; document.getElementById('alarmPopup').classList.remove('hidden'); document.getElementById('alarmPopup').classList.add('flex'); }
+    function closeAlarm() { document.getElementById('alarmPopup').classList.add('hidden'); document.getElementById('alarmPopup').classList.remove('flex'); triggerEstop(false); }
+
+    function setMode(newMode) {
+        if(isEstop) return;
+        mode = newMode;
+        if (mode === 'AUTO') {
+            state = 'FILTRATING'; activeTimer = 0;
+            Object.keys(hw).forEach(k => hw[k] = false);
+            document.getElementById('sw-auto').classList.add('active');
+            updateBanner("SYSTEM MODE: AUTO (FILTRATING)", "mode-auto");
+        } else {
+            state = 'MANUAL_OVERRIDE';
+            document.getElementById('sw-auto').classList.remove('active');
+            updateBanner("SYSTEM MODE: MANUAL OVERRIDE", "mode-manual");
+        }
+        updateVisuals(); 
+    }
+    function toggleMode() { setMode(mode === 'AUTO' ? 'MANUAL' : 'AUTO'); }
+
+    function tglHw(id) {
+        if(mode !== 'MANUAL' || isEstop) return;
+        // Interlocks
+        if(id === 'P01' && !hw.P01 && simRad < 0.1) { triggerAlarm("INTERLOCK: Tangki GSF kosong (< 0.1m). P-01 ditolak."); return; }
+        if(id === 'P02' && !hw.P02 && !hw.V02) { triggerAlarm("FATAL INTERLOCK: V-02 tertutup. Menyalakan P-02 berisiko pecah pipa!"); return; }
+        if(id === 'P03' && !hw.P03 && !hw.M01) { triggerAlarm("INTERLOCK: P-03 (Seeding) butuh M-01 aktif."); return; }
+        
+        hw[id] = !hw[id]; 
+        if(id === 'M01' && !hw.M01) { hw.P03 = false; hw.PC2 = false; } // Cascade off
+        updateVisuals();  
+    }
+
+    function forceSludge(id) {
+        if (isEstop) return;
+        hw[id] = !hw[id];
+        updateVisuals();
+        updateNarrative(`MANUAL OVERRIDE: ${id} ${hw[id] ? 'ON' : 'OFF'}`, "text-purple-400");
+    }
+
+    function trigSeq(type) {
+        if(isEstop) return;
+        if(mode === 'MANUAL') setMode('AUTO'); 
+        autoMicroCountdown = parseInt(document.getElementById('inpAutoMicroInt').value) || 1800; 
+        if(type === 'MACRO') { state = 'MACRO_BW'; activeTimer = 0; switchTab('macro'); updateBanner("⚠️ MACRO BW SEQUENCE RUNNING", "mode-macro"); } 
+        else if (type === 'MICRO') { state = 'MICRO_BW'; activeTimer = 0; switchTab('micro'); updateBanner("▶ MICRO BW SEQUENCE RUNNING", "mode-auto"); }
+    }
+
+    function updateBanner(text, cls) { document.getElementById('sysBanner').innerText = text; document.getElementById('sysBanner').className = `mode-banner ${cls}`; }
+
+    function checkTimer(key, timeInCycle) {
+        let dur = parseInt(document.getElementById(`dur_${key}`).value) || 0;
+        let int = parseInt(document.getElementById(`int_${key}`).value) || 0;
+        let dly = parseInt(document.getElementById(`dly_${key}`).value) || 0;
+        if (timeInCycle < dly) return false; 
+        let activeT = timeInCycle - dly; 
+        if (int === 0) return activeT < dur; 
+        return (activeT % (dur + int)) < dur; 
+    }
+
+    function scadaLoop() {
+        if(isEstop) { updateNarrative("SISTEM BERHENTI DARURAT (E-STOP).", "text-red-500"); updateVisuals(); return; }
+
+        if (mode === 'AUTO') {
+            let totMicro = parseInt(document.getElementById('tot_micro').value) || 60;
+            let triggerMacro = parseFloat(document.getElementById('macro_trigger').value) || 1.8;
+            let interlockLvl = parseFloat(document.getElementById('inpBwInterlock') ? document.getElementById('inpBwInterlock').value : 1.0) || 1.0;
+
+            if (state === 'FILTRATING') {
+                // NORMAL FILTRATION LOGIC
+                hw.M01 = true;
+                hw.P03 = true;
+                hw.PC2 = true;
+                hw.V01 = false; // Logic OFF means Physical Valve OPEN (Normally Open)
+                
+                hw.V02 = false; hw.P02 = false; hw.P01 = false; hw.SRV1 = false; hw.SRV2 = false; hw.PC1 = false;
+                
+                document.getElementById('countMacro').innerText = "";
+                
+                // MICRO BW INTERLOCK (< 1m)
+                if(simRad >= interlockLvl) {
+                    if (autoMicroCountdown > 0) autoMicroCountdown--; else trigSeq('MICRO'); 
+                    updateNarrative("PROSES FILTRASI AKTIF. V-01 (NO) MENGALIR.", "text-green-400"); 
+                } else {
+                    updateNarrative(`LEVEL LOW (<${interlockLvl.toFixed(1)}m): BW COUNTDOWN PAUSED`, "text-yellow-500"); 
+                }
+
+                if (simRad >= triggerMacro) { simRad = triggerMacro; trigSeq('MACRO'); }
+            } 
+            else if (state === 'MACRO_BW' || state === 'MICRO_BW') {
+                // BACKWASH LOGIC
+                hw.V01 = true; // Logic ON means Physical Valve CLOSED (Normally Open)
+                hw.V02 = checkTimer('V02', activeTimer % totMicro); 
+                
+                let checkP02 = checkTimer('P02', activeTimer % totMicro);
+                if (checkP02 && !hw.V02) { triggerAlarm("AUTO FAULT: P-02 jalan tapi V-02 tertutup."); return; }
+
+                if (state === 'MACRO_BW') {
+                    // FORCE OFF INTAKE & AERO
+                    hw.M01 = false; hw.P03 = false; hw.PC2 = false;
+                    
+                    let macroCycles = parseInt(document.getElementById('tot_macro').value) || 5; 
+                    let totalMacroSecs = totMicro * macroCycles;
+                    let currentCycle = Math.floor(activeTimer / totMicro) + 1; 
+                    if(currentCycle > macroCycles) currentCycle = macroCycles; 
+                    let cycleTimer = activeTimer % totMicro; 
+                    
+                    document.getElementById('countMacro').innerText = `EXECUTING: CYCLE ${currentCycle} OF ${macroCycles} (${activeTimer}s / ${totalMacroSecs}s)`;
+                    updateNarrative(`MACRO BW. INTAKE FORCED OFF. SIKLUS: ${currentCycle}/${macroCycles}`, "text-red-400");
+                    
+                    hw.PC1 = checkTimer('PC1', cycleTimer); hw.P01 = checkTimer('P01', cycleTimer) && simRad > 0.1; hw.P02 = checkP02; 
+                    hw.SRV1 = checkTimer('SRV1', cycleTimer); hw.SRV2 = checkTimer('SRV2', cycleTimer);
+                    
+                    activeTimer++;
+                    if (activeTimer >= totalMacroSecs) { state = 'SETTLE'; activeTimer = 0; document.getElementById('countMacro').innerText = ""; updateBanner("MEDIA SETTLEMENT", "mode-manual"); }
+                } 
+                else { 
+                    hw.M01 = true; hw.P03 = true; hw.PC2 = true;
+                    
+                    hw.PC1 = checkTimer('PC1', activeTimer); hw.P01 = checkTimer('P01', activeTimer) && simRad > 0.1; hw.P02 = checkP02; 
+                    hw.SRV1 = checkTimer('SRV1', activeTimer); hw.SRV2 = checkTimer('SRV2', activeTimer);
+                    
+                    updateNarrative(`MICRO BW AKTIF. V-01 LOGIC ON (CLOSED). SISA: ${totMicro - activeTimer}s`, "text-yellow-400");
+                    activeTimer++;
+                    if (activeTimer >= totMicro) { state = 'SETTLE'; activeTimer = 0; updateBanner("MEDIA SETTLEMENT", "mode-manual"); }
+                }
+            }
+            else if (state === 'SETTLE') {
+                hw.V01 = true; // Keep closed
+                hw.V02 = false; hw.P02 = false; hw.P01 = false; hw.SRV1 = false; hw.SRV2 = false; hw.PC1 = false; 
+                updateNarrative(`MEDIA SETTLEMENT. MENUNGGU ${5 - activeTimer}s`, "text-cyan-400");
+                activeTimer++;
+                if(activeTimer > 5) { state = 'FILTRATING'; activeTimer = 0; updateBanner("SYSTEM MODE: AUTO (FILTRATING)", "mode-auto"); autoMicroCountdown = parseInt(document.getElementById('inpAutoMicroInt').value) || 1800; }
+            }
+        } else {
+             updateNarrative("MODE MANUAL. OTOMASI MATI.", "text-yellow-400");
+        }
+
+        // --- Fluid Dynamics Calculations ---
+        let set_m = parseFloat(document.getElementById('inpM01Debit').value) || 7.5;
+        let set_p01 = parseFloat(document.getElementById('inpP01Debit').value) || 15.0;
+        let set_v01 = parseFloat(document.getElementById('inpV01Debit').value) || 7.5;
+        let set_p02 = parseFloat(document.getElementById('inpP02Debit').value) || 15.0;
+        let set_srv = parseFloat(document.getElementById('inpSrvDebit').value) || 5.0;
+
+        let q_in = 0;
+        if (hw.M01) q_in += set_m;
+        if (hw.P02) q_in += set_p02; // P02 pushes water up into GSF
+        if (hw.P03) q_in += 0.15; 
+
+        let q_out = 0;
+        if (hw.P01) q_out += set_p01; // P01 evacuates water
+        if (!hw.V01) q_out += set_v01; // V-01 is Normally Open. If Logic OFF, it's open, water leaves.
+        if (hw.SRV1) q_out += set_srv;
+        if (hw.SRV2) q_out += set_srv;
+
+        let deltaH = (q_in - q_out) * 0.001 / 3.36; // 3.36m2 approx area
+        simRad += deltaH;
+        if(simRad <= 0) simRad = 0;
+        if(simRad >= 3.0) simRad = 3.0; 
+
+        updateVisuals();
+    }
+
+    // --- 4. RENDER VISUALS ---
+    const actConfig = [
+        { id: 'M01', desc: 'Intake Pump', color: 'yellow', unit: 'A', base: 5.2 },
+        { id: 'P03', desc: 'Seeding Pump 1', color: 'purple', unit: 'A', base: 2.1 },
+        { id: 'V01', desc: 'Outlet Valve (NO)', color: 'green', unit: '%', base: 100 },
+        { id: 'V02', desc: 'BW Isolation', color: 'green', unit: '%', base: 100 },
+        { id: 'P02', desc: 'BW Push Pump', color: 'blue', unit: 'A', base: 12.1 },
+        { id: 'P01', desc: 'IASE Evac Pump', color: 'blue', unit: 'A', base: 8.4 },
+        { id: 'SRV1', desc: 'HRS Sludge Left', color: 'purple', unit: '%', base: 100 },
+        { id: 'SRV2', desc: 'HRS Sludge Right', color: 'purple', unit: '%', base: 100 },
+        { id: 'PC1', desc: 'Enable Scour Blower', color: 'cyan', unit: 'Signal', base: 1 },
+        { id: 'PC2', desc: 'Enable Aero-Mixer', color: 'cyan', unit: 'Signal', base: 1 }
+    ];
+
+    function initMatrix() {
+        let html = '';
+        actConfig.forEach(act => {
+            html += `<tr class="border-b border-slate-800 hover:bg-slate-800/50">
+                <td class="p-2.5 font-bold text-slate-300 pl-4">${act.id.replace('SRV1','SR1').replace('SRV2','SR2')}</td>
+                <td class="p-2.5 text-slate-400">${act.desc}</td>
+                <td class="p-2.5 text-center"><div id="diag-led-${act.id}" class="w-3.5 h-3.5 rounded-full mx-auto border border-black bg-[#1e293b] shadow-inner transition-colors"></div></td>
+                <td class="p-2.5 text-center font-bold" id="diag-stat-${act.id}">OFF</td>
+                <td class="p-2.5 text-center font-bold" id="diag-mode-${act.id}">-</td>
+                <td class="p-2.5 text-right font-bold text-cyan-500 pr-4" id="diag-val-${act.id}">0.0</td>
+            </tr>`;
+        });
+        document.getElementById('diag-tbody').innerHTML = html;
+
+        // Init Bubbles
+        let flocHtml = '';
+        for(let i=0; i<15; i++) {
+            let cx = 150 + (i*10);
+            flocHtml += `<circle cx="${cx}" cy="265" r="${Math.random()*2+2}" class="bubble-floc" style="animation-delay: ${Math.random()}s" />`;
+        }
+        document.getElementById('flocBubbles').innerHTML = flocHtml;
+
+        let gsfHtml = '';
+        for(let i=0; i<10; i++) {
+            let cx = 500 + (i*10);
+            gsfHtml += `<circle cx="${cx}" cy="280" r="${Math.random()*3+2}" class="bubble" style="animation-delay: ${Math.random()}s" />`;
+        }
+        document.getElementById('gsfBubbles').innerHTML = gsfHtml;
+    }
+
+    function updateVisuals() {
+        document.getElementById('txtLevel').innerText = `GSF: ${simRad.toFixed(2)}m`;
+        document.getElementById('txtLevelSvg').innerText = `GSF: ${simRad.toFixed(2)}m`; // SVG real-time update
+        
+        let trig = parseFloat(document.getElementById('macro_trigger').value) || 1.8;
+        document.getElementById('trendBar').style.width = `${(simRad/3.0)*100}%`;
+        document.getElementById('lblTrendTrigger').innerText = `${trig.toFixed(1)}m (Trigger)`;
+        
+        let tBar = document.getElementById('trendBar');
+        if(simRad >= trig) tBar.className = "h-full transition-all duration-300 shadow-[0_0_15px_rgba(239,68,68,0.8)] bg-gradient-to-r from-red-600 to-orange-500";
+        else tBar.className = "h-full transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.8)] bg-gradient-to-r from-blue-600 to-cyan-400";
+
+        document.getElementById('txtCountdown').innerText = state === 'FILTRATING' && mode === 'AUTO' && !isEstop ? `NEXT AUTO MICRO BW: ${autoMicroCountdown} s` : `NEXT AUTO MICRO BW: -- s (PAUSED)`;
+
+        let h = (simRad / 3.0) * 200; h = Math.max(5, Math.min(h, 200));
+        document.getElementById('svgWater').setAttribute('height', h); 
+        document.getElementById('svgWater').setAttribute('y', 290 - h);
+
+        // SVG Pipes & Flow Animation
+        const uPipe = (id, cond, color) => {
+            let p = document.getElementById(id); if(!p) return;
+            if(cond) { p.style.stroke = color; p.classList.add('anim-flow'); } else { p.style.stroke = '#475569'; p.classList.remove('anim-flow'); }
+        };
+        uPipe('pipeM01', hw.M01, 'var(--led-cyan)');
+        uPipe('pipeP03', hw.P03, 'var(--led-purple)');
+        uPipe('pipeFlocToHrs', hw.M01, 'var(--led-cyan)');
+        uPipe('pipeHrsToGsf', hw.M01, 'var(--led-cyan)');
+        uPipe('pipeP02', hw.P02, 'var(--led-blue)');
+        
+        // V-01 Pipe Flow (Inverse logic: flows when hw.V01 is FALSE)
+        uPipe('pipeOut', !hw.V01 && simRad > 0.05, 'var(--led-green)');
+
+        const uSludge = (id, cond) => {
+            let p = document.getElementById(id); if(!p) return;
+            if(cond) { p.style.stroke = '#c084fc'; p.setAttribute('stroke-width','8'); p.classList.add('anim-flow-sludge'); } 
+            else { p.style.stroke = '#475569'; p.setAttribute('stroke-width','6'); p.classList.remove('anim-flow-sludge'); }
+        }
+        uSludge('pipeHrsDrain', hw.SRV1 || hw.SRV2);
+        uSludge('pipeSRV1', hw.SRV1);
+        uSludge('pipeSRV2', hw.SRV2);
+
+        let evacRun = hw.P01;
+        document.getElementById('pipeP01Suct').style.stroke = evacRun ? '#94a3b8' : '#475569';
+        document.getElementById('pipeP01Disc').style.stroke = evacRun ? '#94a3b8' : '#475569';
+        if(evacRun) { document.getElementById('pipeP01Suct').classList.add('anim-flow-cloudy'); document.getElementById('pipeP01Disc').classList.add('anim-flow-cloudy'); }
+        else { document.getElementById('pipeP01Suct').classList.remove('anim-flow-cloudy'); document.getElementById('pipeP01Disc').classList.remove('anim-flow-cloudy'); }
+
+        document.getElementById('svgFlocWater').style.opacity = hw.M01 || hw.P01 ? "0.4" : "0.2";
+        document.getElementById('svgHrsWater').style.opacity = hw.M01 || hw.P01 ? "0.4" : "0.2";
+
+        // Bubbles PC-1 and PC-2
+        document.querySelectorAll('.bubble-floc').forEach(b => hw.PC2 ? b.classList.add('anim-rise-floc') : b.classList.remove('anim-rise-floc'));
+        document.querySelectorAll('.bubble').forEach(b => hw.PC1 ? b.classList.add('anim-rise') : b.classList.remove('anim-rise'));
+
+        // Flow Texts
+        const sf = (id, def) => isNaN(parseFloat(document.getElementById(id).value)) ? def.toFixed(1) : parseFloat(document.getElementById(id).value).toFixed(1);
+        document.getElementById('rt-intake').textContent = hw.M01 ? sf('inpM01Debit',7.5) + ' Lps' : '0.0 Lps';
+        document.getElementById('rt-p01').textContent = hw.P01 ? sf('inpP01Debit',15.0) + ' Lps' : '0.0 Lps';
+        document.getElementById('rt-p02').textContent = hw.P02 ? sf('inpP02Debit',15.0) + ' Lps' : '0.0 Lps';
+        document.getElementById('rt-v01').textContent = !hw.V01 ? sf('inpV01Debit',7.5) + ' Lps' : '0.0 Lps'; // Inverse
+        document.getElementById('rt-srv').textContent = (hw.SRV1||hw.SRV2) ? sf('inpSrvDebit',5.0) + ' Lps' : '0.0 Lps';
+
+        // Toggles & Diagnostic Table
+        const cMap = { 'yellow': '#facc15', 'blue': '#60a5fa', 'green': '#4ade80', 'cyan': '#22d3ee', 'purple': '#c084fc' };
+        
+        actConfig.forEach(act => {
+            let isOn = hw[act.id];
+            let sw = document.getElementById(`sw-${act.id.toLowerCase()}`);
+            if(sw) { if(isOn) sw.classList.add('active'); else sw.classList.remove('active'); }
+            
+            let ledHW = document.getElementById(`led-hw-${act.id}`);
+            if(ledHW) { if(isOn) ledHW.classList.add('on'); else ledHW.classList.remove('on'); }
+
+            let indPLC = document.getElementById(`ind-out-${act.id.toLowerCase()}`);
+            if(indPLC) {
+                if(isOn) { indPLC.style.backgroundColor = `var(--led-${act.color})`; indPLC.style.boxShadow = `0 0 10px var(--led-${act.color})`; }
+                else { indPLC.style.backgroundColor = '#1e293b'; indPLC.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.8)'; }
+            }
+
+            let pic = document.getElementById('pic'+act.id);
+            if(pic) { 
+                if(act.id === 'V01') pic.setAttribute('fill', !isOn ? `var(--led-${act.color})` : `var(--led-off)`); // Physical representation
+                else pic.setAttribute('fill', isOn ? `var(--led-${act.color})` : `var(--led-off)`); 
+            }
+
+            // Table Matrix
+            let ledEl = document.getElementById(`diag-led-${act.id}`);
+            if(ledEl) {
+                if(isOn) { ledEl.style.backgroundColor = `var(--led-${act.color})`; ledEl.style.boxShadow = `0 0 8px var(--led-${act.color})`; } 
+                else { ledEl.style.backgroundColor = '#1e293b'; ledEl.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.6)'; }
+            }
+            
+            let statEl = document.getElementById(`diag-stat-${act.id}`);
+            if(statEl) {
+                if(isEstop) { statEl.innerText = 'FAULT'; statEl.className = 'p-2.5 text-center font-bold text-red-500 animate-pulse'; } 
+                else { 
+                    let physText = isOn ? 'ON' : 'OFF';
+                    if (act.id === 'V01') physText = isOn ? 'CLOSED' : 'OPEN'; // Physical translation
+                    statEl.innerText = physText; 
+                    statEl.className = 'p-2.5 text-center font-bold'; 
+                    statEl.style.color = (act.id === 'V01' ? !isOn : isOn) ? cMap[act.color] : '#64748b'; 
+                }
+            }
+
+            document.getElementById(`diag-mode-${act.id}`).innerText = mode;
+            document.getElementById(`diag-mode-${act.id}`).className = `p-2.5 text-center text-[9px] font-bold ${mode==='AUTO'?'text-green-500':'text-yellow-500'}`;
+
+            let valEl = document.getElementById(`diag-val-${act.id}`);
+            if(valEl) {
+                if(isOn && !isEstop) {
+                    let v = act.base; if(act.unit !== '%' && act.unit !== 'Signal') v += (Math.random()*0.2-0.1);
+                    valEl.innerText = `${v.toFixed(1)} ${act.unit}`; valEl.style.color = '#22d3ee';
+                } else { valEl.innerText = `0.0 ${act.unit}`; valEl.style.color = '#475569'; }
+            }
+        });
+
+        // Health LEDs
+        document.getElementById('hc-mod1').className = `hc-led ${isEstop ? 'hc-red' : 'hc-green'}`;
+        document.getElementById('hc-mod2').className = `hc-led ${isEstop ? 'hc-red' : (mode==='AUTO'?'hc-green':'hc-yellow')}`;
+        document.getElementById('hc-mod3').className = `hc-led ${isEstop ? 'hc-red' : 'hc-green'}`;
+        document.getElementById('hc-mod4').className = `hc-led ${simRad > trig+0.1 ? 'hc-red' : (simRad >= trig-0.1 ? 'hc-yellow' : 'hc-green')}`;
+
+        // PLC LEDs
+        document.getElementById('plc-pwr').style.backgroundColor = '#22c55e';
+        document.getElementById('plc-run').style.backgroundColor = (!isEstop && mode==='AUTO') ? '#22c55e' : '#1e293b';
+        document.getElementById('plc-err').style.backgroundColor = isEstop ? '#ef4444' : '#1e293b';
+
+        // --- NEW: AIT & FIT SENSOR SIMULATION ---
+        let ait01_val = (85.0 + (Math.random() * 5 - 2.5)).toFixed(1);
+        let ait02_val = (!hw.V01) ? (1.2 + (Math.random() * 0.4 - 0.2)).toFixed(2) : "0.00";
+        let fit01_val = (!hw.V01) ? parseFloat(document.getElementById('inpV01Debit').value || 7.5).toFixed(1) : "0.0";
+
+        if (isEstop) {
+            document.getElementById('txtTurbSup').innerText = "ERR";
+            if(document.getElementById('txtTurbOut')) document.getElementById('txtTurbOut').innerText = "ERR";
+            document.getElementById('txtFlowP1').innerText = "0.0";
+            ['led-ind01-sup', 'led-ind02-sup', 'led-ind-fit'].forEach(id => {
+                let el = document.getElementById(id);
+                if(el) el.style.backgroundColor = '#ef4444';
+            });
+        } else {
+            document.getElementById('txtTurbSup').innerText = ait01_val;
+            if(document.getElementById('txtTurbOut')) document.getElementById('txtTurbOut').innerText = ait02_val;
+            document.getElementById('txtFlowP1').innerText = fit01_val;
+            ['led-ind01-sup', 'led-ind02-sup', 'led-ind-fit'].forEach(id => {
+                let el = document.getElementById(id);
+                if(el) el.style.backgroundColor = '#22c55e';
+            });
+        }
+        // ----------------------------------------
+    }
+
+    function comBlink() {
+        if (isEstop) { ['led-m1-tx', 'led-m1-rx', 'led-plc-tx', 'led-plc-rx'].forEach(id => { document.getElementById(id).style.backgroundColor = '#475569'; document.getElementById(id).style.boxShadow = 'none'; }); return; }
+        let active = hw.PC1 || hw.PC2 || hw.SRV1; let prob = active ? 0.8 : 0.1;
+        let tx = Math.random() < prob; let rx = Math.random() < prob;
+        const sL = (id, s, c) => { let e = document.getElementById(id); if(s) {e.style.backgroundColor=c; e.style.boxShadow=`0 0 6px ${c}`;} else {e.style.backgroundColor='#475569'; e.style.boxShadow='none';} };
+        sL('led-plc-tx', tx, '#eab308'); sL('led-plc-rx', rx, '#22c55e');
+        sL('led-m1-tx', rx, '#22c55e'); sL('led-m1-rx', tx, '#eab308');
+    }
+
+    // INIT
+    initMatrix();
+    setInterval(scadaLoop, 1000);
+    setInterval(comBlink, 100);
+</script>
+
+</body>
+</html>
